@@ -19,28 +19,40 @@ import {
   PostgresFonteRepository,
   PostgresAchadoRepository
 } from './postgres.repository.js';
+import {
+  SqliteUsuarioRepository,
+  SqliteAgenteRepository,
+  SqliteAnaliseRepository,
+  SqliteFonteRepository,
+  SqliteAchadoRepository
+} from './sqlite.repository.js';
+import { initSqliteDatabase } from '../database/sqlite.js';
 
-const usePostgres = process.env.NODE_ENV === 'production' || process.env.USE_POSTGRES === 'true';
+const usePostgres = process.env.USE_POSTGRES === 'true';
+
+if (!usePostgres && process.env.NODE_ENV !== 'test') {
+  initSqliteDatabase();
+}
 
 export const usuarioRepository: IUsuarioRepository = usePostgres
   ? new PostgresUsuarioRepository()
-  : new MemoryUsuarioRepository();
+  : new SqliteUsuarioRepository();
 
 export const agenteRepository: IAgenteRepository = usePostgres
   ? new PostgresAgenteRepository()
-  : new MemoryAgenteRepository();
+  : new SqliteAgenteRepository();
 
 export const analiseRepository: IAnaliseRepository = usePostgres
   ? new PostgresAnaliseRepository()
-  : new MemoryAnaliseRepository();
+  : new SqliteAnaliseRepository();
 
 export const fonteRepository: IFonteRepository = usePostgres
   ? new PostgresFonteRepository()
-  : new MemoryFonteRepository();
+  : new SqliteFonteRepository();
 
 export const achadoRepository: IAchadoRepository = usePostgres
   ? new PostgresAchadoRepository()
-  : new MemoryAchadoRepository();
+  : new SqliteAchadoRepository();
 
 export * from './interfaces.js';
 export {
@@ -48,5 +60,15 @@ export {
   MemoryAgenteRepository,
   MemoryAnaliseRepository,
   MemoryFonteRepository,
-  MemoryAchadoRepository
+  MemoryAchadoRepository,
+  SqliteUsuarioRepository,
+  SqliteAgenteRepository,
+  SqliteAnaliseRepository,
+  SqliteFonteRepository,
+  SqliteAchadoRepository,
+  PostgresUsuarioRepository,
+  PostgresAgenteRepository,
+  PostgresAnaliseRepository,
+  PostgresFonteRepository,
+  PostgresAchadoRepository
 };

@@ -20,12 +20,14 @@ import {
 import { DesinformacaoAgent } from './agents/desinformacao.agent.js';
 import { FraudeDigitalAgent } from './agents/fraude-digital.agent.js';
 import { LinkSuspeitoAgent } from './agents/link-suspeito.agent.js';
+import { GeminiService } from './ai/gemini.service.js';
 import { isValidUrl } from '../utils/url-validator.js';
 
 export class AnaliseService {
   private desinformacaoAgent = new DesinformacaoAgent();
   private fraudeDigitalAgent = new FraudeDigitalAgent();
   private linkSuspeitoAgent = new LinkSuspeitoAgent();
+  private geminiService = new GeminiService();
 
   constructor(
     private analiseRepo: IAnaliseRepository,
@@ -98,19 +100,26 @@ export class AnaliseService {
     let resultadoAgente: ResultadoAgente;
 
     try {
-      // RN08: Cada análise deverá ser executada de acordo com o agente selecionado.
-      switch (agente.tipo) {
-        case 'desinformacao':
-          resultadoAgente = await this.desinformacaoAgent.analisar(conteudoParaAnalisar);
-          break;
-        case 'fraude_digital':
-          resultadoAgente = await this.fraudeDigitalAgent.analisar(conteudoParaAnalisar);
-          break;
-        case 'link_suspeito':
-          resultadoAgente = await this.linkSuspeitoAgent.analisar(conteudoParaAnalisar);
-          break;
-        default:
-          throw new Error(`Agente ${agente.tipo} não possui implementação de análise.`);
+      // Tenta análise com IA Generativa (Google Gemini) se a API Key estiver presente
+      const resultadoIA = await this.geminiService.analisarComIA(agente.tipo, conteudoParaAnalisar);
+
+      if (resultadoIA) {
+        resultadoAgente = resultadoIA;
+      } else {
+        // RN08: Cada análise deverá ser executada de acordo com o agente selecionado (Motor Heurístico Fallback)
+        switch (agente.tipo) {
+          case 'desinformacao':
+            resultadoAgente = await this.desinformacaoAgent.analisar(conteudoParaAnalisar);
+            break;
+          case 'fraude_digital':
+            resultadoAgente = await this.fraudeDigitalAgent.analisar(conteudoParaAnalisar);
+            break;
+          case 'link_suspeito':
+            resultadoAgente = await this.linkSuspeitoAgent.analisar(conteudoParaAnalisar);
+            break;
+          default:
+            throw new Error(`Agente ${agente.tipo} não possui implementação de análise.`);
+        }
       }
 
       // Persiste achados e fontes no banco
