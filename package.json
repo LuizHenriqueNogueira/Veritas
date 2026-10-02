@@ -1,0 +1,21 @@
+{
+  "name": "analisador-ia-veritas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Analisador IA - Veritas: Solução computacional para verificação de desinformação, fraudes e links suspeitos",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:desktop": "npm --prefix desktop run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:desktop": "npm --prefix desktop run build",
+    "build": "npm run build:backend && npm run build:desktop",
+    "test": "npm --prefix backend run test",
+    "test:coverage": "npm --prefix backend run test:coverage"
+  },
+  "workspaces": [
+    "backend",
+    "desktop"
+  ],
+  "author": "Juan Alberto Bezerra Jeronimo, Luiz Fernando da Silva Araújo, Luiz Henrique Nogueira de Moraes, Maria Eduarda Marques Silva",
+  "license": "MIT"
+}
