@@ -9,7 +9,7 @@ import {relevance} from '../research/html.js';
 export function groqBody(tipo:TipoAgente,conteudo:string,pesquisa?:EvidenceContext){
   const config=configuracaoIA();
   return {model:config.model,messages:[{role:'system',content:instrucaoSistema(tipo,pesquisa)},{role:'user',content:JSON.stringify({conteudo_para_analise:conteudo,...(pesquisa?{pesquisa}: {})})}],
-    max_completion_tokens:config.maxOutputTokens,reasoning_effort:'low',stream:false,
+    max_completion_tokens:config.maxOutputTokens,reasoning_effort:'low',temperature:0,seed:42,stream:false,
     response_format:{type:'json_schema',json_schema:{name:'analise_veritas',strict:true,schema:pesquisa?schemaComPesquisa:schemaAnalise}}};
 }
 export function reservedTokens(tipo:TipoAgente,conteudo:string,pesquisa?:EvidenceContext){
