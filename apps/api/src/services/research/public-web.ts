@@ -41,7 +41,7 @@ export class PublicWeb {
     }
     throw new Error('Limite de redirecionamentos atingido.');
   }
-  async article(value:string,excludedHost?:string){
+  async article(value:string,excludedHost?:string,maxBytes=1200000){
     const u=validatePublicUrl(value,excludedHost);let robots=this.robots.get(u.origin);
     if(!robots || Date.now()-robots.at>3600000){
       const response=await this.get(u.origin+'/robots.txt',{excludedHost,maxBytes:100000,timeoutMs:6000,redirects:1});
@@ -51,7 +51,7 @@ export class PublicWeb {
       if(this.robots.size>200)this.robots.delete(this.robots.keys().next().value!);
     }
     if(!robotsAllowed(robots.body,u.pathname+u.search))throw new Error('Leitura bloqueada pelo robots.txt do portal.');
-    const page=await this.get(value,{excludedHost});
+    const page=await this.get(value,{excludedHost,maxBytes});
     if(page.status!==200)throw new Error(`Página indisponível (HTTP ${page.status}).`);
     if(!/text\/html|application\/xhtml\+xml/i.test(page.contentType))throw new Error('O resultado não é uma página HTML legível.');
     return page;

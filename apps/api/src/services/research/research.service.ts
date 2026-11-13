@@ -11,25 +11,26 @@ export class ResearchService {
   private pages=new Map<string,{at:number;value:Partial<ResearchSource>}>();
   constructor(private search=new SearchService(),private web=new PublicWeb()){}
   status(){return {enabled:process.env.FACTCHECK_ENABLED!=='false',portals:PORTALS,paidSearch:false,cacheMinutes:10,maxPages:5,readsPages:true,searchProvider:'DuckDuckGo HTML e índices públicos',appliesTo:['desinformacao','fraude_digital','link_suspeito']};}
-  async consultar(content:string,explicit?:string,tipo:TipoAgente='desinformacao',scope='local',contexto=''):Promise<ResearchResult>{
+  async consultar(content:string,explicit?:string,tipo:TipoAgente='desinformacao',scope='local',contexto='',paginaOrigem=''):Promise<ResearchResult>{
     let query=searchTerms(content,explicit,tipo);
     if(tipo==='link_suspeito' && (contexto || explicit)){try{const terms=searchTerms(contexto,explicit,'fraude_digital');query=`${new URL(content).hostname} ${terms || 'phishing golpe'}`.slice(0,140);}catch{query='';}}
     const base:ResearchResult={query,searchedAt:new Date().toISOString(),portals:[],failedPortals:[],sources:[],state:'SEM_RESULTADOS',attemptedPages:0,provider:'DuckDuckGo HTML e índices públicos',tipo};
     if(!this.status().enabled)return {...base,state:'DESATIVADA'};
     if(query.length<3)return {...base,state:'TERMOS_INSUFICIENTES'};
     let excluded='';if(tipo==='link_suspeito')try{excluded=new URL(content).hostname.toLowerCase();}catch{}
-    const identity=createHash('sha256').update(JSON.stringify([scope,content,contexto])).digest('hex');
+    const identity=createHash('sha256').update(JSON.stringify([scope,content,contexto,paginaOrigem])).digest('hex');
     const key=JSON.stringify([identity,query,tipo,excluded]),cached=this.cache.get(key);
     if(cached && Date.now()-cached.at<(cached.value.state==='INDISPONIVEL'?60000:600000))return structuredClone(cached.value);
     const waiting=this.pending.get(key);if(waiting)return structuredClone(await waiting);
-    const request=this.research(base,excluded,identity);this.pending.set(key,request);
+    const request=this.research(base,excluded,identity,paginaOrigem);this.pending.set(key,request);
     try{const value=await request;this.cache.set(key,{at:Date.now(),value});if(this.cache.size>100)this.cache.delete(this.cache.keys().next().value!);return structuredClone(value);}finally{this.pending.delete(key);}
   }
-  private async research(base:ResearchResult,excluded:string,identity:string):Promise<ResearchResult>{
+  private async research(base:ResearchResult,excluded:string,identity:string,paginaOrigem=''):Promise<ResearchResult>{
     const discovery=await this.search.discover(base.query);base.portals=discovery.portals;base.failedPortals=discovery.failedPortals;
     const unique=new Map<string,ResearchSource>();
     for(const s of discovery.sources){
       const u=new URL(s.url),host=u.hostname.toLowerCase();
+      if(paginaOrigem){const original=new URL(paginaOrigem);if(u.origin===original.origin && u.pathname.replace(/\/$/,'')===original.pathname.replace(/\/$/,''))continue;}
       if(/\/(noticias-sobre|tag|tags|busca|search|category)\//.test(u.pathname))continue;
       if(excluded && (host===excluded || host.endsWith('.'+excluded)))continue;
       if(relevance(s.title,s.excerpt,base.query)<0.5)continue;
@@ -50,6 +51,7 @@ export class ResearchService {
       else{
         try{
           const page=await this.web.article(s.url,excluded);
+          if(paginaOrigem){const final=new URL(page.url),original=new URL(paginaOrigem);if(final.origin===original.origin && final.pathname.replace(/\/$/,'')===original.pathname.replace(/\/$/,''))throw new Error('A página enviada não é uma confirmação independente.');}
           const a=extractArticle(page.body,page.url,base.query);
           // O domínio final pode ter outra classificação após redirecionar.
           data={url:page.url,title:a.title || s.title,date:a.date || s.date,text:a.text,reviewedClaim:a.reviewedClaim,reviewRating:a.reviewRating,

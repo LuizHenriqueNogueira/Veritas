@@ -68,7 +68,7 @@ export function extractArticle(html:string,url:string,query:string){
   $('script,style,noscript,nav,footer,header,aside,form,button,iframe,.related-posts,.sharedaddy,.social-share,[aria-hidden="true"]').remove();
   let text=typeof article?.articleBody==='string'?plain(article.articleBody,35000):'';
   if(text.length<180){
-    const selectors=['[itemprop="articleBody"]','.entry-content','.content-text','.article-body','.article__body','article','main','body'];
+    const selectors=['[itemprop="articleBody"]','.mc-article-body','.entry-content','.content-text','.article-body','.article__body','article','main','body'];
     for(const selector of selectors){
       const container=$(selector).first();if(!container.length)continue;
       const paragraphs=container.find('p,h2,h3,li').map((_i,e)=>$(e).text().replace(/\s+/g,' ').trim()).get().filter(t=>t.length>35);

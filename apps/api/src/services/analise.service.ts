@@ -27,6 +27,7 @@ import { isValidUrl } from '../utils/url-validator.js';
 import {apresentarAnalise} from './presentation.service.js';
 import {traducaoLegada} from './verdict.service.js';
 import {analysisJobs,checkJob,cancellable,AnalysisCancelled} from './analysis-jobs.js';
+import {pageContentService,PageContentService,PageContent} from './page-content.service.js';
 
 export class AnaliseService {
   private desinformacaoAgent = new DesinformacaoAgent();
@@ -40,7 +41,8 @@ export class AnaliseService {
     private achadoRepo: IAchadoRepository,
     private ai: Pick<AIService, 'analisar'> = aiService,
     private reputation: Pick<ReputationService, 'consultar'> = reputationService,
-    private factcheck: Pick<FactCheckService,'consultar'> = factCheckService
+    private factcheck: Pick<FactCheckService,'consultar'> = factCheckService,
+    private pageContent:Pick<PageContentService,'ler'>=pageContentService
   ) {}
 
   /**
@@ -75,7 +77,6 @@ export class AnaliseService {
         throw new Error('A URL fornecida não possui um formato válido.');
       }
       conteudoParaAnalisar = dto.url.trim();
-      if (agente.tipo !== 'link_suspeito') throw new Error('Para analisar o conteúdo de uma página, cole seu texto ou use a captura OCR. A análise de URL está disponível no agente Link Suspeito.');
     } else {
       if (!dto.conteudo || dto.conteudo.trim().length === 0) {
         throw new Error('O conteúdo textual para análise não pode estar vazio.');
@@ -101,13 +102,27 @@ export class AnaliseService {
     const job=analysisJobs.start(usuarioId,dto.solicitacao_id);
     if(job.controller.signal.aborted){analysisJobs.finish(job,'CANCELADA');throw new AnalysisCancelled();}
 
+    const urlOriginal=dto.tipo_entrada==='URL'?conteudoParaAnalisar:null;
+    let pagina:PageContent|undefined;
+    if(urlOriginal && agente.tipo!=='link_suspeito'){
+      try{
+        pagina=await cancellable(this.pageContent.ler(urlOriginal),job.controller.signal);
+        checkJob(job.controller.signal);
+        conteudoParaAnalisar=pagina.content;
+      }catch(error){
+        analysisJobs.finish(job,error instanceof AnalysisCancelled?'CANCELADA':'ERRO');
+        if(error instanceof AnalysisCancelled)throw error;
+        throw new Error('Não foi possível ler essa página. Use uma página pública com HTTPS ou cole o texto da notícia. Nenhuma análise de IA foi iniciada.');
+      }
+    }
+
     // RN25 / RN26: Registra a análise no banco associada ao usuário com status inicial PROCESSANDO
     const novaAnalise = await this.analiseRepo.create({
       usuario_id: usuarioId,
       agente_id: agente.id,
       tipo_entrada: dto.tipo_entrada,
-      conteudo: dto.tipo_entrada !== 'URL' ? conteudoParaAnalisar : null,
-      url: dto.tipo_entrada === 'URL' || agente.tipo === 'link_suspeito' ? conteudoParaAnalisar : null,
+      conteudo: pagina || dto.tipo_entrada !== 'URL' ? conteudoParaAnalisar : null,
+      url: urlOriginal || (agente.tipo === 'link_suspeito' ? conteudoParaAnalisar : null),
       contexto:contexto || null,
       status: 'PROCESSANDO' as StatusAnalise,
       classificacao: null,
@@ -122,7 +137,7 @@ export class AnaliseService {
       checkJob(job.controller.signal);
       const c = configuracaoIA();
       const scope = String(usuarioId);
-      const pesquisa = await cancellable(contexto?this.factcheck.consultar(conteudoParaAnalisar,dto.termos_busca,agente.tipo,scope,contexto):this.factcheck.consultar(conteudoParaAnalisar,dto.termos_busca,agente.tipo,scope),job.controller.signal);
+      const pesquisa = await cancellable(pagina?this.factcheck.consultar(conteudoParaAnalisar,dto.termos_busca,agente.tipo,scope,'',pagina.url):contexto?this.factcheck.consultar(conteudoParaAnalisar,dto.termos_busca,agente.tipo,scope,contexto):this.factcheck.consultar(conteudoParaAnalisar,dto.termos_busca,agente.tipo,scope),job.controller.signal);
       checkJob(job.controller.signal);
       let resultadoIA: ResultadoAgente | null = null;
       let erroIA = '';
@@ -162,6 +177,9 @@ export class AnaliseService {
       if(agente.tipo!=='link_suspeito' && erroIA){resultadoAgente.achados.push({categoria:'Síntese de IA não executada',descricao:erroIA,nivel_relevancia:'MEDIO'});resultadoAgente.resultado+='\n\nIA indisponível: '+erroIA;}
       if(agente.tipo==='desinformacao' && !resultadoIA){resultadoAgente.classificacao='Inconclusivo: síntese de IA não executada';resultadoAgente.resultado+='\n\nAs fontes são mostradas para consulta; regras locais não atribuem um veredito factual.';}
       resultadoAgente=aplicarChecagens(resultadoAgente,pesquisa);
+      if(pagina){
+        resultadoAgente.achados.push({categoria:'Leitura da página enviada',descricao:`${pagina.title || 'Página informada'}. ${pagina.partial?'Foi analisado um recorte inicial do conteúdo para respeitar o limite de uso da IA.':'O texto disponível da página foi lido.'} O texto efetivamente analisado aparece em Conteúdo lido da página. A página enviada é o objeto da análise, não uma confirmação independente.`,nivel_relevancia:'BAIXO'});
+      }
       checkJob(job.controller.signal);
       // Persiste achados e fontes no banco
       const fontesSalvas = [];

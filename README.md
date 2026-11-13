@@ -16,6 +16,8 @@ Sem configuração particular, a primeira abertura cria o modo local, sem chave 
 
 ## Contexto, histórico e avaliação
 
+Em Desinformação e Fraude Digital, escolha **Link da página** para informar uma página pública HTTPS. O Veritas lê o texto disponível e analisa um recorte inicial dentro do orçamento de IA. Colar um link sozinho no campo de texto também ativa essa leitura. O resultado conserva a URL e mostra o texto efetivamente analisado. A página enviada não é usada como confirmação independente de si mesma. Se o portal impedir a leitura ou não disponibilizar texto suficiente, a IA não é acionada; cole o texto ou use OCR. Link Suspeito continua consultando estrutura e reputação sem abrir o destino.
+
 Em Link Suspeito, informe a URL e, se desejar, abra Adicionar contexto da mensagem para explicar onde a recebeu e o que foi pedido. O contexto acompanha a URL na IA quando habilitada; as bases consultam somente a URL. Os termos opcionais personalizam a pesquisa de fontes. Para verificar uma notícia, use Desinformação com o texto da afirmação.
 
 No Histórico, Excluir move a pesquisa para a lixeira após confirmação. Desfazer exclusão ou Ver lixeira > Restaurar recupera os registros. A exclusão é reversível.
