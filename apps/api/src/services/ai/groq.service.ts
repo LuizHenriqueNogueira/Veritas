@@ -5,6 +5,7 @@ import { readLimited } from '../network.js';
 import {EvidenceContext,ResearchResult} from '../research/types.js';
 import {evidenceContext,validateEvidence} from '../research/evidence.js';
 import {budgetLimits} from './usage-budget.js';
+import {relevance} from '../research/html.js';
 export function groqBody(tipo:TipoAgente,conteudo:string,pesquisa?:EvidenceContext){
   const config=configuracaoIA();
   return {model:config.model,messages:[{role:'system',content:instrucaoSistema(tipo,pesquisa)},{role:'user',content:JSON.stringify({conteudo_para_analise:conteudo,...(pesquisa?{pesquisa}: {})})}],
@@ -19,9 +20,14 @@ export function boundedEvidence(tipo:TipoAgente,conteudo:string,search:ResearchR
   const context=evidenceContext(search),ceiling=budgetLimits().tokensMinute-32;
   // A página é lida localmente; apenas trechos limitados são enviados ao modelo.
   context.fontes=context.fontes.map(s=>({...s,titulo:s.titulo.slice(0,100),trecho:s.trecho.slice(0,750),...(s.alegacao?{alegacao:s.alegacao.slice(0,160)}:{})}));
+  // Prioriza fontes identificadas e pertinentes, preservando seus IDs originais.
+  const priority=(s:EvidenceContext['fontes'][number])=>({OFICIAL:3,CHECAGEM:3,IMPRENSA:2,OUTRA:0}[s.tipo])+relevance(s.titulo,s.trecho,context.consulta);
+  context.fontes.sort((a,b)=>priority(b)-priority(a));
   while(reservedTokens(tipo,conteudo,context)>ceiling){
     const longest=context.fontes.reduce<typeof context.fontes[number]|undefined>((best,s)=>!best || s.trecho.length>best.trecho.length?s:best,undefined);
-    if(longest && longest.trecho.length>60){longest.trecho=longest.trecho.slice(0,Math.max(60,longest.trecho.length-60));continue;}
+    // Uma frase cortada em 60 caracteres pode perder justamente a resposta.
+    // Prefere menos fontes com trechos úteis a cinco trechos inutilizáveis.
+    if(longest && longest.trecho.length>240){longest.trecho=longest.trecho.slice(0,Math.max(240,longest.trecho.length-60));continue;}
     const extra=context.fontes.find(s=>s.alegacao || s.rotulo);if(extra){delete extra.alegacao;delete extra.rotulo;continue;}
     if(context.fontes.length){context.fontes.pop();continue;}
     break; // O orçamento bloqueará um texto que, sozinho, já exceda o teto.

@@ -20,6 +20,9 @@ export function searchTerms(content:string,explicit?:string,tipo='desinformacao'
 }
 export function sourceKind(value:string):SourceKind{
   const u=new URL(value),host=u.hostname.replace(/^www\./,'');
+  // Identidade verificada pelo Manual de Padrões do Pix (bcb.gov.br).
+  // Não estende a confiança a todo o GitHub, forks, issues ou comentários.
+  if(host==='github.com' && /^\/bacen(?:\/pix-api(?:\/blob\/(?:master|main)\/readme\.md)?)?\/?$/i.test(u.pathname))return 'OFICIAL';
   if(['boatos.org','e-farsas.com','aosfatos.org','checamos.afp.com','projetocomprova.com.br','agencialupa.com.br','lupa.uol.com.br'].includes(host) || host==='g1.globo.com' && u.pathname.startsWith('/fato-ou-fake/'))return 'CHECAGEM';
   if(host.endsWith('.gov.br') || ['cert.br','bcb.gov.br','febraban.org.br','robertocarlos.com'].includes(host))return 'OFICIAL';
   if(['g1.globo.com','agenciabrasil.ebc.com.br','bbc.com','reuters.com','apnews.com','cnn.com.br','cnnbrasil.com.br','uol.com.br','folha.uol.com.br','estadao.com.br','veja.abril.com.br'].includes(host))return 'IMPRENSA';
@@ -27,6 +30,7 @@ export function sourceKind(value:string):SourceKind{
 }
 export function publisher(value:string){
   const u=new URL(value),host=u.hostname.replace(/^www\./,'');
+  if(host==='github.com' && sourceKind(value)==='OFICIAL')return 'Banco Central do Brasil — GitHub oficial';
   const names:Record<string,string>={'boatos.org':'Boatos.org','e-farsas.com':'E-farsas','aosfatos.org':'Aos Fatos','checamos.afp.com':'AFP Checamos','projetocomprova.com.br':'Projeto Comprova','agencialupa.com.br':'Lupa','lupa.uol.com.br':'Lupa','g1.globo.com':u.pathname.startsWith('/fato-ou-fake/')?'Fato ou Fake':'g1'};
   return names[host] || host;
 }
@@ -44,7 +48,14 @@ export function relevance(title:string,text:string,query:string){
   return terms.length?terms.filter(t=>hay.includes(t)).length/terms.length:0;
 }
 export function subjectMatches(title:string,text:string,query:string){
-  if(!/\b(morreu|faleceu|morto|morta)\b/.test(normalize(query)))return true;
+  if(!/\b(morreu|faleceu|morto|morta)\b/.test(normalize(query))){
+    // Palavras genéricas de contexto não substituem o assunto da consulta.
+    // Ex.: banco/central/brasil em uma notícia não a tornam uma fonte sobre Pix.
+    const generic=new Set('brasil brasileiro brasileira banco central sistema instituicao instituicoes criado criada criados criadas criou criar criador criadora criacao publicado publicada origem'.split(' '));
+    const anchors=words(query).filter(w=>!STOP.has(w) && !generic.has(w));
+    const hay=normalize(title+' '+text);
+    return !anchors.length || anchors.some(w=>new RegExp(`\\b${w}\\b`).test(hay));
+  }
   const anchors=words(query).filter(w=>!['morreu','faleceu','morto','morta','morte','falecimento','hoje','ontem','cantor','ator','jogador'].includes(w) && !/^\d+$/.test(w));
   if(anchors.length<2)return true;
   // Uma notícia sobre Antônio Carlos não se torna evidência sobre Roberto Carlos.
@@ -82,10 +93,11 @@ export function extractArticle(html:string,url:string,query:string){
 }
 export function relevantExcerpt(source:ResearchSource,query:string,max=1300){
   const terms=words(query),text=source.text || source.excerpt;
-  const sentences=text.split(/(?<=[.!?])\s+|\n+/).filter(s=>s.length>25 && s.length<1800);
+  const sentences=[...new Set(text.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(s=>s.length>25 && s.length<1800))];
   const ranked=sentences.map((s,i)=>({s,i,score:terms.reduce((n,t)=>n+(normalize(s).includes(t)?1:0),0)
-    +(/não (?:\w+ ){0,2}morreu|nao (?:\w+ ){0,2}morreu|é falso|e falso|e fake|está vivo|esta vivo|é golpe|e golpe|não há|nao ha/i.test(s)?6:0)
+    +(subjectMatches('',s,query) && /não (?:\w+ ){0,2}morreu|nao (?:\w+ ){0,2}morreu|é falso|e falso|e fake|está vivo|esta vivo|é golpe|e golpe|não há|nao ha/i.test(s)?6:0)
     +(/fraude|golpe|desment/i.test(s)?1:0)-(/^\s*(boato|rumor|bulo)\s*[-–:]/i.test(s)?5:0)-(/\?$/.test(s.trim())?2:0)})).sort((a,b)=>b.score-a.score || a.i-b.i);
-  const chosen=ranked.slice(0,3).map(x=>x.s).join(' ');
+  const pertinent=ranked.filter(x=>x.score>0 && subjectMatches('',x.s,query));
+  const chosen=(pertinent.length?pertinent:ranked).slice(0,3).map(x=>x.s).join(' ');
   return (chosen || text).replace(/\s+/g,' ').trim().slice(0,max);
 }

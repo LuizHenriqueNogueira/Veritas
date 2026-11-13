@@ -27,7 +27,12 @@ export function validateEvidence(result:ResultadoAgente,value:any,context:Eviden
     const pressIds=new Set(trusted.map(c=>context.fontes.find(s=>s.id===c.id)!.origem));
     if(verdict!=='EVIDENCIA_INSUFICIENTE' && !(direct || pressIds.size>=2)){
       verdict='EVIDENCIA_INSUFICIENTE';
-      result.resultado='A síntese recebida não apresentou citações literais, pertinentes e suficientes para sustentar um veredito factual. Confira as fontes e os trechos disponíveis e compare a pessoa, o fato e a data da alegação. O parecer automático não foi tratado como uma confirmação ou refutação.';
+      const reason=relevant.length
+        ?'Há citações que se relacionam diretamente com a afirmação, mas elas ainda não atendem aos critérios de confirmação das fontes. Falta uma checagem direta, uma fonte oficial identificada ou apoio de dois veículos de imprensa independentes.'
+        :citations.length
+          ?'Foram encontrados trechos de contexto, mas nenhuma citação validada sustenta o veredito proposto sobre a mesma afirmação.'
+          :'A síntese recebida não apresentou citações literais, pertinentes e suficientes para sustentar um veredito factual.';
+      result.resultado=reason+' Confira as fontes e os trechos disponíveis e compare a pessoa, o fato e a data da alegação. O parecer automático não foi tratado como uma confirmação ou refutação.';
     }
     result.classificacao=names[verdict];
     result.resultado=`Veredito factual: ${names[verdict]}.\n\n${result.resultado}`;
