@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 
 interface OCRReviewViewProps {
   initialText: string;
+  defaultAgent?: string;
   onStartAnalysis: (text: string, agenteTipo: string) => void;
   onNewCapture: () => void;
   onCancel: () => void;
@@ -10,6 +11,7 @@ interface OCRReviewViewProps {
 
 export const OCRReviewView: React.FC<OCRReviewViewProps> = ({
   initialText,
+  defaultAgent='desinformacao',
   onStartAnalysis,
   onNewCapture,
   onCancel
@@ -17,7 +19,7 @@ export const OCRReviewView: React.FC<OCRReviewViewProps> = ({
   const [error,setError]=useState('');
   const textRef=useRef<HTMLTextAreaElement>(null);
   const [texto, setTexto] = useState(initialText);
-  const [agenteSelecionado, setAgenteSelecionado] = useState<string>('desinformacao');
+  const [agenteSelecionado, setAgenteSelecionado] = useState<string>(defaultAgent);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

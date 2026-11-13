@@ -747,7 +747,6 @@ input[type="checkbox"] { accent-color:var(--primary);width:20px;height:20px;flex
 [data-theme="dark"] .capture-preview { background:var(--bg-input);color:var(--text-secondary); }
 [data-theme="dark"] .risk-badge.medio { color:var(--warning-text); }
 [data-theme="dark"] .risk-badge.baixo { color:var(--success-text); }
-[data-motion="reduced"] *,[data-motion="reduced"] *::before,[data-motion="reduced"] *::after { animation:none!important;transition:none!important;scroll-behavior:auto!important; }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important;transition:none!important; } }
 [data-text-size="large"] .main-content p,[data-text-size="large"] .finding-body,[data-text-size="large"] .analyzed-content { font-size:17px!important;line-height:1.75!important; }
 .muted { color:var(--text-muted);font-size:13px;line-height:1.6; }

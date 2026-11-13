@@ -19,6 +19,7 @@ export function App() {
   const main=useRef<HTMLElement>(null);
   const activeRequest=useRef<string|null>(null);
   const [draft,setDraft]=useState<AnalysisDraft|null>(null);
+  const [analysisSession,setAnalysisSession]=useState(0);
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[cancelling,setCancelling]=useState(false),[opening,setOpening]=useState(false);
   const [usuario, setUsuario] = useState<{ id: number; nome: string; email: string; perfil?: string } | null>(null);
   const {preferences,update: updatePreferences,saveError}=usePreferences(usuario?.id ?? null);
@@ -74,7 +75,14 @@ export function App() {
     catch{setError('Não foi possível confirmar o cancelamento. Consulte o histórico antes de repetir a análise.');}
     finally{activeRequest.current=null;setCurrentProcessing(null);setCancelling(false);}
   };
-  const navigate=async(view:string)=>{if(cancelling)return;if(activeRequest.current)await cancelPending();requestId.current++;setOpening(false);setActiveResult(null);setCurrentView(view);};
+  const navigate=async(view:string)=>{
+    if(cancelling)return;if(activeRequest.current)await cancelPending();
+    if(view==='new-analysis'){
+      setDraft(previous=>preferences.keepDraft && previous?{...previous,agenteTipo:preferences.defaultAgent}:null);
+      setAnalysisSession(value=>value+1);
+    }else if(!preferences.keepDraft)setDraft(null);
+    requestId.current++;setOpening(false);setActiveResult(null);setCurrentView(view);
+  };
   const handleLogout=async()=>{if(cancelling)return;if(activeRequest.current)await cancelPending();clearSession();};
   const handleIniciarAnalise = async (params:AnalysisInput) => {
     setError('');setNotice('');
@@ -158,6 +166,7 @@ export function App() {
         {opening && <p role="status">Abrindo pesquisa...</p>}
         {currentView === 'new-analysis' && (
           <NewAnalysisView
+            key={analysisSession}
             defaultAgent={preferences.defaultAgent}
             initialDraft={draft} onDraftChange={setDraft}
             onStartAnalysis={handleIniciarAnalise}
@@ -168,6 +177,7 @@ export function App() {
         {currentView === 'ocr-review' && (
           <OCRReviewView
             initialText={capturedOcrText}
+            defaultAgent={draft?.agenteTipo || preferences.defaultAgent}
             onStartAnalysis={(textoRevisado, agenteTipo) => {
               handleIniciarAnalise({
                 tipo_entrada: 'CAPTURA_OCR',
