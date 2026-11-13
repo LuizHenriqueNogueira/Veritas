@@ -1,0 +1,66 @@
+{
+  "metodo": "Inspeção técnica guiada por tarefas; não é estudo com participantes.",
+  "escopo": "Fluxos de nova análise, feedback, histórico/lixeira, cancelamento, erros, temas e ajuda avaliados nesta versão.",
+  "records": [
+    {
+      "heuristica": "1. Visibilidade do estado do sistema",
+      "atende": "Sim",
+      "criterio": "Carregamento de histórico/feedback, salvamento e processamento possuem estado visível.",
+      "evidencias": "UH02; UF01; teste de cancelamento da interface; VU03/VU07"
+    },
+    {
+      "heuristica": "2. Correspondência com o mundo real",
+      "atende": "Sim",
+      "criterio": "Rótulos em português distinguem URL, contexto e termos; achados de link e erros receberam linguagem direta.",
+      "evidencias": "UN01; ER01/ER02; VU01"
+    },
+    {
+      "heuristica": "3. Controle e liberdade",
+      "atende": "Sim",
+      "criterio": "Cancelar interrompe a orquestração e descarta respostas tardias. Exclusão é confirmada e reversível; avaliação pode ser editada.",
+      "evidencias": "AC03–AC07; UF02; UH01/UH02; VU02–VU08"
+    },
+    {
+      "heuristica": "4. Consistência e padrões",
+      "atende": "Sim",
+      "criterio": "Navegação, botões e formulários usam o mesmo padrão; campos e resultados acompanham os temas.",
+      "evidencias": "VU09/VU11; testes de formulário e histórico"
+    },
+    {
+      "heuristica": "5. Prevenção de erros",
+      "atende": "Sim",
+      "criterio": "URL e texto são validados; a escolha “Não” exige explicação; exclusão pede confirmação; autorizações são conferidas no servidor.",
+      "evidencias": "UN02; HF01/HF02/HF04/HF07; VU02/VU06"
+    },
+    {
+      "heuristica": "6. Reconhecimento em vez de memorização",
+      "atende": "Sim",
+      "criterio": "Agentes exibem finalidade, campos têm orientação e rascunho é mantido durante a sessão.",
+      "evidencias": "UN01/UN03; VU01/VU10"
+    },
+    {
+      "heuristica": "7. Flexibilidade e eficiência",
+      "atende": "Sim",
+      "criterio": "Ctrl + Enter envia a análise; pesquisa/filtro do histórico e edição de feedback evitam repetir o fluxo.",
+      "evidencias": "UN03; UH05; CP13; UF02"
+    },
+    {
+      "heuristica": "8. Design estético e minimalista",
+      "atende": "Sim",
+      "criterio": "Contexto e pesquisa avançada são opcionais; dados do motor não aparecem para usuário comum; evidência neutra não vira sinal verde.",
+      "evidencias": "TP01–TP07; TA02/TA03; VU01/VU09"
+    },
+    {
+      "heuristica": "9. Diagnóstico e recuperação de erros",
+      "atende": "Sim",
+      "criterio": "Erros de limite, configuração, conexão e relógio têm orientações distintas. Falhas de feedback mantêm o texto; restauração recupera exclusão.",
+      "evidencias": "ER01/ER02; UF03; UH04; VU04/VU06"
+    },
+    {
+      "heuristica": "10. Ajuda e documentação",
+      "atende": "Sim",
+      "criterio": "Ajuda pesquisável inclui contexto, termos, feedback, lixeira, cancelamento e atalhos.",
+      "evidencias": "VU10; Ajuda com 20 orientações"
+    }
+  ]
+}

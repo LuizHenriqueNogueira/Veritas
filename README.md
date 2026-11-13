@@ -1,123 +1,101 @@
-# Analisador IA - Veritas 🛡️
+# Veritas
 
-**Modelo de Documento e Implementação de Solução Computacional**  
-**Turma:** GPE02M80044  
-**Professor:** Ranyelson Neres Carvalho  
-**Integrantes:** Juan Alberto Bezerra Jeronimo, Luiz Fernando da Silva Araújo, Luiz Henrique Nogueira de Moraes e Maria Eduarda Marques Silva.
+Aplicativo acadêmico para avaliar indícios de desinformação, fraude digital e links suspeitos. Combina regras locais, pesquisa de fontes, um modelo via Groq e bases públicas de reputação. Versão 1.6.0.
 
----
+## Instalar pelo GitHub
 
-## 1. Visão Geral do Projeto
+Este repositório contém o código-fonte da versão final 1.6.0. Use Node 22.13 ou superior e siga os comandos da seção Desenvolver e testar. Para obter a distribuição Windows a partir do código, execute `npm run build` e `npm run package:windows`. A pasta `release` é gerada localmente e não é versionada.
 
-O **Veritas** é um software para computador desenvolvido para auxiliar usuários na análise contextual de textos, capturas de tela e links provenientes de diferentes fontes digitais, identificando possíveis indícios de:
-1. **Desinformação:** boatos, apelo emocional exagerado, manipulação retórica e ausência de fontes.
-2. **Fraude Digital:** tentativas de golpe, phishing, falsa urgência financeira e engenharia social.
-3. **Link Suspeito:** anomalias de domínio, IPs diretos, extensões de alto risco e ofuscação de destino.
+## Abrir o aplicativo no Windows
 
-O sistema dispõe ainda de uma ferramenta de **captura de tela com OCR integrado**, permitindo que textos presentes em imagens ou aplicações sem seleção direta sejam extraídos, revisados pelo usuário e analisados pelos agentes.
+Abra `release/Veritas-Windows/Veritas.exe`. Mantenha a pasta inteira, incluindo `resources` e as DLLs. O pacote já leva o Node necessário ao backend e inicia o serviço em uma porta local livre. Não é necessário abrir terminais nem instalar Node para usar o executável.
 
----
+A configuração particular desta instalação fica em `release/Veritas-Windows/config/.env`, fora do código do aplicativo. A cópia local preserva as chaves, os caminhos do histórico e o contador de consumo já utilizados. Esse arquivo não acompanha o ZIP para distribuição.
 
-## 2. Estrutura do Repositório
+Sem configuração particular, a primeira abertura cria o modo local, sem chave de IA, com dados na pasta de usuário do Veritas. Configure os serviços externos no `.env` privado. Não publique chaves, banco de contas ou contador de consumo.
+
+## Contexto, histórico e avaliação
+
+Em Link Suspeito, informe a URL e, se desejar, abra Adicionar contexto da mensagem para explicar onde a recebeu e o que foi pedido. O contexto acompanha a URL na IA quando habilitada; as bases consultam somente a URL. Os termos opcionais personalizam a pesquisa de fontes. Para verificar uma notícia, use Desinformação com o texto da afirmação.
+
+No Histórico, Excluir move a pesquisa para a lixeira após confirmação. Desfazer exclusão ou Ver lixeira > Restaurar recupera os registros. A exclusão é reversível.
+
+No resultado concluído, Sim ou Não avalia a utilidade. Ao escolher Não, é obrigatório descrever o problema; a avaliação pode ser editada e fica salva no banco. Esse feedback não treina automaticamente a IA.
+
+Durante o processamento, Cancelar análise e voltar interrompe a orquestração e preserva o rascunho durante a sessão. Chamadas externas já iniciadas podem consumir cota. O atalho Ctrl + Enter inicia uma análise.
+
+## Botão flutuante
+
+Depois de entrar na conta, use outro programa ou minimize o Veritas. Um pequeno escudo permite voltar ao aplicativo. Clique para abrir; arraste para reposicionar. O botão direito permite ocultá-lo ou encerrar o Veritas. A opção também fica em Configurações > Acesso rápido, separada por conta.
+
+Fechar a janela encerra o aplicativo e seu backend. Minimizar mantém o acesso pelo botão flutuante e pelo ícone da bandeja. O botão é ocultado durante a captura de tela e na saída da conta.
+
+## Estrutura do código
 
 ```text
-veritas/
-├── package.json                   # Scripts globais de orquestração
-├── README.md                      # Documentação técnica e guia de execução
-├── backend/                       # Back-end REST API (Node.js, Express, TypeScript)
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── vitest.config.ts
-│   ├── src/
-│   │   ├── app.ts                 # Configuração do Express, middlewares e CORS
-│   │   ├── server.ts              # Ponto de entrada do servidor HTTP (Porta 3001)
-│   │   ├── config/
-│   │   ├── database/
-│   │   │   ├── db.ts              # Pool de conexão PostgreSQL
-│   │   │   └── schema.sql         # Script DDL com tabelas, índices e carga inicial
-│   │   ├── models/
-│   │   │   └── index.ts           # Interfaces TypeScript (Usuario, Agente, Analise...)
-│   │   ├── repositories/
-│   │   │   ├── interfaces.ts      # Contratos dos repositórios
-│   │   │   ├── memory.repository.ts # Repositórios em memória (testes unitários isolados)
-│   │   │   ├── postgres.repository.ts # Repositórios PostgreSQL (produção)
-│   │   │   └── index.ts
-│   │   ├── services/
-│   │   │   ├── auth.service.ts    # Cadastro, login, bcrypt e JWT (RN01, RN02, RN03)
-│   │   │   ├── ocr.service.ts     # ServicoCapturaOCR (RN10 a RN15)
-│   │   │   ├── analise.service.ts # Orquestrador de análises e regras de negócio
-│   │   │   └── agents/
-│   │   │       ├── desinformacao.agent.ts # Agente de Desinformação
-│   │   │       ├── fraude-digital.agent.ts # Agente de Fraude Digital
-│   │   │       └── link-suspeito.agent.ts # Agente de Link Suspeito
-│   │   ├── controllers/           # Camada de controle HTTP REST
-│   │   ├── routes/                # Roteamento dos endpoints da API
-│   │   ├── middlewares/           # Autenticação JWT e tratamento centralizado de erros
-│   │   └── utils/                 # Validador sintático de URLs (RN09, RN16)
-│   └── tests/
-│       └── unit/                  # 22 Testes de unidade com 100% de sucesso
-└── desktop/                       # Aplicação Desktop / Interface React
-    ├── package.json
-    ├── vite.config.ts
-    ├── index.html
-    └── src/
-        ├── App.tsx                # Roteamento e orquestrador de estado do desktop
-        ├── api.ts                 # Cliente HTTP conectado ao backend
-        ├── styles.css             # Estilização visual (Telas 1 a 8 do documento)
-        └── components/
-            ├── Sidebar.tsx        # Navegação lateral e perfil do usuário
-            ├── LoginView.tsx      # Tela 1: Login de Usuário
-            ├── RegisterView.tsx   # Tela 2: Cadastro de Conta
-            ├── NewAnalysisView.tsx# Tela 3: Tela Inicial / Nova Análise
-            ├── CaptureOverlay.tsx # Tela 4: Captura de Região da Tela
-            ├── OCRReviewView.tsx  # Tela 5: Confirmação e Edição do OCR
-            ├── ProcessingView.tsx # Tela 6: Processamento da Análise
-            ├── ResultView.tsx     # Tela 7: Resultado com Achados, Fontes e Feedback
-            └── HistoryView.tsx    # Tela 8: Histórico Individual com Busca e Filtros
+Veritas-Final-v7/
+  apps/
+    api/         API, agentes, pesquisa, reputação, banco e testes
+    desktop/     Interface React, integração Electron e testes da interface
+  assets/        Ícone e índices públicos de reputação por hash
+  docs/          Arquitetura, configuração e relatório das alterações
+  scripts/       Preparação, verificação de serviços e empacotamento
+  release/       Pacote Windows gerado, separado do código
+  package.json   Comandos principais
 ```
 
----
+Veja `docs/ARQUITETURA.md` para o mapa dos módulos. Dependências, cobertura, resultados de build, bancos de usuários e configurações pessoais ficam fora do Git. A versão atual substitui as antigas pastas `backend` e `desktop` pela organização em `apps/api` e `apps/desktop`.
 
-## 3. Instruções de Execução
+## Desenvolver e testar
 
-### Pré-requisitos
-- **Node.js**: v18+ (recomendado v20+ ou v24+)
-- **NPM**: v9+
-- **PostgreSQL**: (opcional para demonstração; o sistema possui fallback automático in-memory para execução imediata e testes).
+Requer Node 22.13 ou superior. Na raiz:
 
-### Passos para Instalação e Execução
+```sh
+npm ci
+npm run setup
+npm run dev
+```
 
-1. **Instalar dependências do projeto:**
-   ```bash
-   npm --prefix backend install
-   npm --prefix desktop install
-   ```
+O modelo `apps/api/.env.example` não contém credenciais. Execute `npm run setup` para criar `apps/api/.env` com um segredo JWT exclusivo. Nesse arquivo local, configure `AI_PROVIDER=groq` e `GROQ_API_KEY` para usar sua chave privada. O Google Safe Browsing usa `SAFE_BROWSING_API_KEY` no mesmo arquivo privado. No executável Windows, a configuração fica em `config/.env` ao lado de `Veritas.exe`. Depois de trocar uma chave, feche e reabra o Veritas para que o serviço leia a configuração atualizada. Não publique arquivos `.env`, chaves ou pacotes contendo essas credenciais. Os limites de consumo e os bancos locais devem ser preservados durante a troca da chave. Para executar a versão compilada pelo código:
 
-2. **Executar a suíte de testes de unidade:**
-   ```bash
-   npm run test
-   ```
-   Para visualizar a cobertura detalhada de código:
-   ```bash
-   npm run test:coverage
-   ```
+```sh
+npm run build
+npm start
+```
 
-3. **Iniciar o servidor Back-end (Porta 3001):**
-   ```bash
-   npm run dev:backend
-   ```
+Verificações:
 
-4. **Iniciar a aplicação Desktop / Front-end (Porta 3000):**
-   Em um segundo terminal:
-   ```bash
-   npm run dev:desktop
-   ```
-   Acesse a aplicação no navegador ou ambiente Electron em `http://localhost:3000`.
+```sh
+npm test
+npm run test:desktop
+npm run test:coverage
+```
 
----
+Empacotamento no Windows, após compilar:
 
-## 4. Banco de Dados e Script DDL
-O script SQL completo está localizado em:
-`backend/src/database/schema.sql`
+```sh
+npm run package:windows
+```
 
-Ele cria as 5 tabelas especificadas no projeto (`usuario`, `agente`, `analise`, `fonte`, `achado`), com chaves primárias, chaves estrangeiras, restrições UNIQUE e a carga inicial dos 3 agentes do sistema.
+O empacotador usa o Electron instalado e inclui o Node que executou o comando. Use uma versão compatível com `node:sqlite`. As chaves e bancos não são incorporados ao pacote. O executável recebe nome, versão e ícone próprios.
+
+## Resultados e limites
+
+Informação confirmada aparece em verde quando as citações lidas satisfazem os critérios da checagem. Desinformação identificada aparece em vermelho. Informação enganosa ou fora de contexto recebe atenção. Falta de evidências e consultas parciais ficam neutras.
+
+Em fraude e links, verde significa que as verificações não identificaram sinais relevantes; não certifica remetentes ou sites. Um registro positivo nas bases e sinais estruturais relevantes prevalecem sobre uma avaliação de baixo risco da linguagem.
+
+Os links são consultados em OpenPhish, Phishing.Database e, quando configurado, Google Safe Browsing. A URL suspeita não é aberta. As fontes comunitárias não cobrem toda a internet e podem conter falsos positivos. A versão distribui índices de URLs por hash, preservando o momento em que foram obtidos, e tenta atualizá-los após 12 horas. A base completa exige um download maior na atualização.
+
+Os limites persistentes de IA continuam ativos. Separar cache por conta não separa nem reinicia as cotas da instalação. Não apague `ai-usage.db` para liberar chamadas.
+
+O OCR usa Tesseract local, com revisão antes do envio à análise. A imagem não é gravada pelo serviço de OCR. O texto confirmado pode ser enviado aos serviços habilitados.
+
+## Fontes de reputação e licenças
+
+- [OpenPhish Community](https://github.com/openphish/public_feed): uso acadêmico não comercial, sujeito aos termos da fonte.
+- [Phishing.Database](https://github.com/Phishing-Database/Phishing.Database): fonte adicional; licença MIT indicada no projeto.
+- [Google Safe Browsing](https://developers.google.com/safe-browsing/v4/lookup-api): consulta opcional com chave particular.
+- [Distribuição Electron](https://www.electronjs.org/docs/latest/tutorial/application-distribution): pacote Windows com runtime e ícone próprios.
+
+Resultados de teste e limitações conhecidas estão em `docs/ALTERACOES_E_TESTES.md`.

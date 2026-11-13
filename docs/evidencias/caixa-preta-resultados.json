@@ -1,0 +1,115 @@
+{
+  "version": "1.6.0",
+  "data": "2026-11-07T03:31:25.176Z",
+  "ambiente": "Executável Windows; SQLite isolado; IA local sem consumo de tokens",
+  "records": [
+    {
+      "id": "CP01",
+      "cenario": "API do executável responde e solicita autenticação",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP02",
+      "cenario": "Cadastro e login de duas contas fictícias",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP03",
+      "cenario": "Rejeita texto vazio sem criar pesquisa",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP04",
+      "cenario": "Rejeita URL inválida",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP05",
+      "cenario": "Cria análise de fraude e apresenta sinais de risco",
+      "situacao": "Aprovado",
+      "observado": "Pesquisa 4, concluída com sinais de risco."
+    },
+    {
+      "id": "CP06",
+      "cenario": "HU20: resposta negativa exige explicação; comentário vazio é rejeitado",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP07",
+      "cenario": "HU20: salva avaliação negativa com comentário",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP08",
+      "cenario": "HU20: edição salva Sim sem duplicar comentário",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP09",
+      "cenario": "Outra conta não acessa o histórico, detalhe ou feedback",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP10",
+      "cenario": "Outra conta não exclui, restaura ou avalia pesquisa alheia",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP11",
+      "cenario": "Excluir move pesquisa para a lixeira",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP12",
+      "cenario": "Restaurar recupera pesquisa e feedback",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP13",
+      "cenario": "Busca e filtro do histórico permanecem funcionais",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP14",
+      "cenario": "URL e contexto ficam separados no resultado",
+      "situacao": "Aprovado",
+      "observado": "URL preservada; modo local e bases desativadas resultam corretamente em parecer neutro."
+    },
+    {
+      "id": "CP15",
+      "cenario": "Rejeita contexto maior que o limite e comentário de tipo inválido",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP16",
+      "cenario": "Desinformação sem IA não inventa confirmação factual",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP17",
+      "cenario": "OCR real em português, sem armazenar imagem",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    },
+    {
+      "id": "CP18",
+      "cenario": "Cancelamento antes do início impede criar pesquisa",
+      "situacao": "Aprovado",
+      "observado": "Comportamento esperado confirmado."
+    }
+  ]
+}

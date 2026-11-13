@@ -1,0 +1,11 @@
+import {it,expect,vi,beforeEach,afterEach} from 'vitest';
+import {mkdtempSync} from 'node:fs';import {tmpdir} from 'node:os';import path from 'node:path';
+import {UrlFeed,PHISHING_DATABASE_FEED} from '../../src/services/reputation/url-feed.js';
+const target='https://phishing.example.test/login?x=1';
+const file=()=>path.join(mkdtempSync(path.join(tmpdir(),'veritas-extra-feed-')),'cache.json');
+beforeEach(()=>{process.env.PHISHING_DATABASE_ENABLED='true';});afterEach(()=>{process.env.PHISHING_DATABASE_ENABLED='false';});
+it('consulta URL exata na fonte adicional sem abrir o destino',async()=>{const req=vi.fn().mockResolvedValue(new Response(target));const feed=new UrlFeed(req,file());expect((await feed.consult(target,'agora')).estado).toBe('LISTADO');expect(req.mock.calls.map(c=>c[0])).toEqual([PHISHING_DATABASE_FEED]);});
+it('não transfere o registro para outra página, query ou protocolo',async()=>{const feed=new UrlFeed(vi.fn().mockResolvedValue(new Response(target)),file());for(const u of ['https://phishing.example.test/','https://phishing.example.test/login?x=2','http://phishing.example.test/login?x=1'])expect((await feed.consult(u,'agora')).estado).toBe('NAO_LISTADO');});
+it('cópia em disco funciona sem rede após reiniciar',async()=>{const f=file();await new UrlFeed(vi.fn().mockResolvedValue(new Response(target)),f).consult(target,'agora');const req=vi.fn().mockRejectedValue(new Error('offline'));expect((await new UrlFeed(req,f).consult(target,'agora')).estado).toBe('LISTADO');expect(req).not.toHaveBeenCalled();});
+it('HTML ou indisponibilidade não são interpretados como ausência de ameaças',async()=>{for(const response of [new Response('<html>Erro</html>'),new Response('',{status:503})]){const feed=new UrlFeed(vi.fn().mockResolvedValue(response),file());expect((await feed.consult(target,'agora')).estado).toBe('INDISPONIVEL');}});
+it('cópia vencida sem atualização é exibida como desatualizada',async()=>{let now=Date.now();const req=vi.fn().mockResolvedValueOnce(new Response(target)).mockRejectedValue(new Error('offline'));const feed=new UrlFeed(req,file(),()=>now);await feed.consult(target,'agora');now+=13*3600000;expect((await feed.consult('https://outro.example.test/','depois')).estado).toBe('DESATUALIZADO');});

@@ -1,21 +1,41 @@
 {
   "name": "analisador-ia-veritas",
-  "version": "1.0.0",
+  "version": "1.6.0",
   "private": true,
   "description": "Analisador IA - Veritas: Solução computacional para verificação de desinformação, fraudes e links suspeitos",
   "scripts": {
-    "dev:backend": "npm --prefix backend run dev",
-    "dev:desktop": "npm --prefix desktop run dev",
-    "build:backend": "npm --prefix backend run build",
-    "build:desktop": "npm --prefix desktop run build",
+    "dev:backend": "npm --prefix apps/api run dev",
+    "dev:desktop": "npm --prefix apps/desktop run dev",
+    "build:backend": "npm --prefix apps/api run build",
+    "build:desktop": "npm --prefix apps/desktop run build",
     "build": "npm run build:backend && npm run build:desktop",
-    "test": "npm --prefix backend run test",
-    "test:coverage": "npm --prefix backend run test:coverage"
+    "test": "npm --prefix apps/api run test",
+    "test:coverage": "npm --prefix apps/api run test:coverage",
+    "setup": "node scripts/setup.cjs",
+    "dev": "concurrently -k -n backend,desktop \"npm run dev:backend\" \"npm run dev:desktop\"",
+    "test:unit": "npm --prefix apps/api run test:unit",
+    "test:integration": "npm --prefix apps/api run test:integration",
+    "start": "concurrently -k -n backend,desktop \"npm --prefix apps/api start\" \"npm --prefix apps/desktop run electron\"",
+    "verificar:ia": "node scripts/verificar-ia.cjs",
+    "verificar:fontes": "node scripts/verificar-fontes.cjs",
+    "admin:configurar": "node scripts/configurar-admin.cjs",
+    "package:windows": "node scripts/package-windows.cjs",
+    "test:desktop": "vitest run --config apps/desktop/vitest.config.ts"
   },
   "workspaces": [
-    "backend",
-    "desktop"
+    "apps/api",
+    "apps/desktop"
   ],
   "author": "Juan Alberto Bezerra Jeronimo, Luiz Fernando da Silva Araújo, Luiz Henrique Nogueira de Moraes, Maria Eduarda Marques Silva",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "jsdom": "^26.0.0",
+    "rcedit": "^4.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
 }

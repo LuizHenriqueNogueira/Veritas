@@ -1,0 +1,62 @@
+{
+  "versao": "1.6.0",
+  "data": "07/11/2026",
+  "metodo": "Inspeção e interação nativa com Veritas.exe, conta e banco fictícios separados da instalação de uso.",
+  "records": [
+    {
+      "id": "VU01",
+      "cenario": "Link Suspeito mostra URL obrigatória acima de contexto opcional; termos ficam recolhidos.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU02",
+      "cenario": "Excluir abre confirmação; Esc fecha sem excluir e devolve o foco ao botão de origem.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU03",
+      "cenario": "Confirmação pelo teclado move a pesquisa para a lixeira e apresenta aviso.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU04",
+      "cenario": "Desfazer exclusão restaura a pesquisa na lista.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU05",
+      "cenario": "Editar avaliação permite trocar Sim por Não e abre comentário com foco.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU06",
+      "cenario": "Enviar Não vazio informa erro, conserva formulário e volta ao comentário.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU07",
+      "cenario": "Comentário descritivo é salvo; aparecem avaliação, texto e Editar avaliação.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU08",
+      "cenario": "Após encerrar e reabrir o executável, o comentário salvo é recuperado no resultado.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU09",
+      "cenario": "Nova análise, resultado e histórico têm leitura verificada no tema escuro; configurações, ajuda e resultado também no claro.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU10",
+      "cenario": "Busca por feedback na Ajuda encontra duas orientações e expande as respostas.",
+      "situacao": "Aprovado"
+    },
+    {
+      "id": "VU11",
+      "cenario": "Após ajuste, navegação para Ajuda inicia no topo e botões do formulário e histórico têm largura adequada.",
+      "situacao": "Aprovado"
+    }
+  ]
+}
